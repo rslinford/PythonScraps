@@ -22,9 +22,10 @@ def filter_words(words):
     return filtered_dict
 
 
-def get_the_vanity_words(article_address):
+# Parsing customized, article extracted from its JSON wrapper
+def get_the_vanity_words_custom_parsing(article_address):
     r = requests.get(article_address)
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text, features="lxml")
     word_dict = dict()
     for x in soup.find_all(type="application/ld+json"):
         j = json.loads(x.text)
@@ -47,9 +48,10 @@ def get_the_vanity_words(article_address):
     return word_dict
 
 
-def get_the_vanity_words2(article_address):
+# Parsing not customized, reads entire page
+def get_the_vanity_words_general_parsing(article_address):
     r = requests.get(article_address)
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text, features="lxml")
     word_dict = dict()
     t = soup.text
     words = t.split(" ")
@@ -72,7 +74,7 @@ def get_the_vanity_words2(article_address):
 def get_the_news_words():
     base_url = 'http://www.nytimes.com'
     r = requests.get(base_url)
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text, features="lxml")
 
     summary_list = []
     for summary in soup.find_all(class_="summary-class"):
@@ -100,14 +102,14 @@ article_url = 'https://www.vanityfair.com/hollywood/2022/07/stranger-things-cale
 # article_url = 'https://www.vanityfair.com/style/2022/07/how-patti-labelle-commanded-the-essence-festival-2022-stage-with-just-one-louboutin'
 # article_url = 'https://www.vanityfair.com/style/society/2014/06/monica-lewinsky-humiliation-culture'
 
-word_counts = filter_words(get_the_vanity_words2(article_url))
+word_counts = filter_words(get_the_vanity_words_general_parsing(article_url))
 print(word_counts)
 wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
 plt.imshow(wc, interpolation='bilInear')
 plt.axis('off')
 plt.show()
 
-word_counts = filter_words(get_the_vanity_words(article_url))
+word_counts = filter_words(get_the_vanity_words_custom_parsing(article_url))
 print(word_counts)
 wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
 plt.imshow(wc, interpolation='bilInear')
