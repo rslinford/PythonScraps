@@ -1,0 +1,6 @@
+words
+for
+testing
+reading file
+line by line
+/some/file/name
