@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
               'vanity', 'newsmax', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday',
-              'minutes', 'hours']
+              'minutes', 'hours', 'guardian', 'times', 'news', 'associated']
 
 
 def filter_words(words):
@@ -100,21 +100,6 @@ def get_the_news_words():
     return filter_words(words)
 
 
-# article_url = 'https://www.vanityfair.com/news/2022/07/donald-trump-2024-announcement-prosecution'
-# article_url = 'https://www.vanityfair.com/style/2022/06/gabby-petito-death-brian-laundrie#intcid=_vanity-fair-verso-hp-trending_6304d215-7283-4465-8710-3807c98e6025_popular4-1'
-# article_url = 'https://www.vanityfair.com/hollywood/2022/07/stranger-things-caleb-mclaughlin-interview-season-4-volume-2'
-# article_url = 'https://www.vanityfair.com/style/2022/07/flamingo-estate-founder-richard-christiansens-summer-essentials'
-# article_url = 'https://www.vanityfair.com/news/2021/07/rupert-murdoch-donald-trump-arizona-2020#intcid=_vanity-fair-bottom-recirc_0a7a3676-6b5b-443d-a430-5d4944c075b7_timespent-1yr-evergreen'
-# article_url = 'https://www.vanityfair.com/news/2021/07/rupert-murdoch-donald-trump-arizona-2020#intcid=_vanity-fair-bottom-recirc_0a7a3676-6b5b-443d-a430-5d4944c075b7_timespent-1yr-evergreen'
-# article_url = 'https://www.vanityfair.com/news/2022/07/highland-park-shooting-limits-of-bipartisan-gun-compromise'
-# article_url = 'https://www.vanityfair.com/style/2022/07/fka-twigs-viktor-rolf-good-fortune-interview'
-# article_url = 'https://www.vanityfair.com/style/2022/07/how-patti-labelle-commanded-the-essence-festival-2022-stage-with-just-one-louboutin'
-# article_url = 'https://www.vanityfair.com/style/society/2014/06/monica-lewinsky-humiliation-culture'
-# article_url = 'http://www.nytimes.com'
-# article_url1 = 'https://web.archive.org/web/20220101003007/https://www.newsmax.com/'
-# article_url2 = 'https://www.newsmax.com/'
-
-
 def display_wordcloud(web_page):
     word_counts = filter_words(get_words_general_parsing(web_page))
     print(word_counts)
@@ -124,11 +109,12 @@ def display_wordcloud(web_page):
     plt.show()
 
 
-def save_wordcloud(web_page, file_name):
+def save_wordcloud(web_page, file_name, title):
     word_counts = filter_words(get_words_general_parsing(web_page))
     wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
     plt.imshow(wc, interpolation='bilInear')
-    plt.axis('off')
+    plt.axis("off")
+    plt.title(title)
     print(f'Saving wordcloud from {web_page} to file: {file_name}')
     plt.savefig(file_name)
 
@@ -138,32 +124,39 @@ def generate_unique_filename(prefix):
     return f'{prefix}_{uid}.png'
 
 
+def make_gif(dir_name, gif_file_name):
+    # dir of dir_nam
+    dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
+                '.png' in x and os.path.isfile(os.path.join(dir_name, x))]
+    with imageio.get_writer(gif_file_name, mode='I', duration=0.3) as writer:
+        for filename in dir_list:
+            writer.append_data(imageio.imread_v2(filename))
+
+
 def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
     dir_name = f'{dir_name_prefix}_{year_str}{month_str}'
     all_file_names = []
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
-    for day_of_month in range(1, 5):
+    for day_of_month in range(1, 28):
         day_of_month_str = str(day_of_month)
         if len(day_of_month_str) == 1:
             day_of_month_str = '0' + day_of_month_str
         wayback_base_url = 'https://web.archive.org/web/'
         target_web_page = web_page
-        for hour in ['00', '06', '09', '12', '15', '18']:
+        for hour in ['00', '06', '12', '18']:
             wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
             all_file_names.append(file_name)
-            save_wordcloud(wayback_web_page, file_name)
+            save_wordcloud(wayback_web_page, file_name,
+                           f'{web_page} on {year_str}-{month_str}-{day_of_month_str}')
     gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
-    print(f'Creating: {gif_file_name}')
-    with imageio.get_writer(gif_file_name, mode='I', frame_duration=0.4) as writer:
-        for filename in all_file_names:
-            image = imageio.imread_v2(filename)
-            writer.append_data(image)
+    make_gif(dir_name, gif_file_name)
 
 
-# month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
-# month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
-# month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-month_in_summary('https://news.google.com/', "2022", "06", "googlenews")
+if __name__ == '__main__':
+    # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
+    # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
+    # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
+    month_in_summary('https://news.google.com/', "2011", "11", "googlenews")
