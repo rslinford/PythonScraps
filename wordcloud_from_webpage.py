@@ -4,7 +4,8 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import requests
 from bs4 import BeautifulSoup
 
-stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years', 'vanity']
+stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
+              'vanity', 'newsmax', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
 
 def filter_words(words):
@@ -14,7 +15,7 @@ def filter_words(words):
             continue
         if w.lower() in stop_words:
             continue
-        w2 = w.strip('0123456789.,\'=_')
+        w2 = w.strip('0123456789.,\'=_:[]{}-')
         if w2 != w:
             filtered_dict[w2] = words[w]
         else:
@@ -49,12 +50,12 @@ def get_the_vanity_words_custom_parsing(article_address):
 
 
 # Parsing not customized, reads entire page
-def get_the_vanity_words_general_parsing(article_address):
+def get_words_general_parsing(article_address):
+    print(f'Requesting: {article_address}')
     r = requests.get(article_address)
     soup = BeautifulSoup(r.text, features="lxml")
     word_dict = dict()
-    t = soup.text
-    words = t.split(" ")
+    words = soup.text.split(" ")
     for w in words:
         if len(w) < 5:
             continue
@@ -93,7 +94,7 @@ def get_the_news_words():
 
 # article_url = 'https://www.vanityfair.com/news/2022/07/donald-trump-2024-announcement-prosecution'
 # article_url = 'https://www.vanityfair.com/style/2022/06/gabby-petito-death-brian-laundrie#intcid=_vanity-fair-verso-hp-trending_6304d215-7283-4465-8710-3807c98e6025_popular4-1'
-article_url = 'https://www.vanityfair.com/hollywood/2022/07/stranger-things-caleb-mclaughlin-interview-season-4-volume-2'
+# article_url = 'https://www.vanityfair.com/hollywood/2022/07/stranger-things-caleb-mclaughlin-interview-season-4-volume-2'
 # article_url = 'https://www.vanityfair.com/style/2022/07/flamingo-estate-founder-richard-christiansens-summer-essentials'
 # article_url = 'https://www.vanityfair.com/news/2021/07/rupert-murdoch-donald-trump-arizona-2020#intcid=_vanity-fair-bottom-recirc_0a7a3676-6b5b-443d-a430-5d4944c075b7_timespent-1yr-evergreen'
 # article_url = 'https://www.vanityfair.com/news/2021/07/rupert-murdoch-donald-trump-arizona-2020#intcid=_vanity-fair-bottom-recirc_0a7a3676-6b5b-443d-a430-5d4944c075b7_timespent-1yr-evergreen'
@@ -101,17 +102,27 @@ article_url = 'https://www.vanityfair.com/hollywood/2022/07/stranger-things-cale
 # article_url = 'https://www.vanityfair.com/style/2022/07/fka-twigs-viktor-rolf-good-fortune-interview'
 # article_url = 'https://www.vanityfair.com/style/2022/07/how-patti-labelle-commanded-the-essence-festival-2022-stage-with-just-one-louboutin'
 # article_url = 'https://www.vanityfair.com/style/society/2014/06/monica-lewinsky-humiliation-culture'
+# article_url = 'http://www.nytimes.com'
+article_url1 = 'https://web.archive.org/web/20220101003007/https://www.newsmax.com/'
+article_url2 = 'https://www.newsmax.com/'
 
-word_counts = filter_words(get_the_vanity_words_general_parsing(article_url))
-print(word_counts)
-wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
-plt.imshow(wc, interpolation='bilInear')
-plt.axis('off')
-plt.show()
 
-word_counts = filter_words(get_the_vanity_words_custom_parsing(article_url))
-print(word_counts)
-wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
-plt.imshow(wc, interpolation='bilInear')
-plt.axis('off')
-plt.show()
+def display_wordcoud(web_page):
+    word_counts = filter_words(get_words_general_parsing(web_page))
+    print(word_counts)
+    wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
+    plt.imshow(wc, interpolation='bilInear')
+    plt.axis('off')
+    plt.show()
+
+
+def january_in_summary(web_page):
+    for day_of_month in range(1, 32):
+        day_of_month_str = str(day_of_month)
+        if len(day_of_month_str) == 1:
+            day_of_month_str = '0' + day_of_month_str
+        wayback_web_page = f'https://web.archive.org/web/202201{day_of_month_str}003007/https://www.newsmax.com/'
+        display_wordcoud(wayback_web_page)
+
+
+january_in_summary('https://www.newsmax.com/')
