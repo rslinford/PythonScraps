@@ -8,11 +8,12 @@ from wordcloud import WordCloud, STOPWORDS
 import requests
 from bs4 import BeautifulSoup
 
-stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
-              'vanity', 'newsmax', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
-              'saturday', 'minutes', 'hours', 'guardian', 'times', 'news', 'associated',
-              'year\'s', 'their', 'first', 'people', 'movie', 'esquire', 'continue', 'reading']
-
+stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'esquire', 'every',
+              'first', 'friday', 'greatest', 'guardian', 'hours', 'iconic', 'issue', 'might', 'minutes',
+              'model', 'monday', 'movie', 'movies', 'news', 'newsmax', 'people', 'photographs', 'picture',
+              'reading', 'really', 'saturday', 'scenes', 'story', 'sunday', 'their', 'three',
+              'thursday', 'times', 'tuesday', 'vanity', 'wednesday', 'which', 'would',
+              "year's", 'years']
 
 def filter_words(words):
     filtered_dict = dict()
@@ -163,9 +164,35 @@ def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
     make_gif(dir_name, gif_file_name)
 
 
+def year_in_summary(web_page, year_str, dir_name_prefix):
+    # Target days: the first of each month
+    first_of_month = '01'
+    dir_name = f'{dir_name_prefix}_{year_str}{first_of_month}'
+    all_file_names = []
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
+    for month in range(1, 12):
+        month_str = str(month)
+        if len(month_str) == 1:
+            month_str = '0' + month_str
+        wayback_base_url = 'https://web.archive.org/web/'
+        target_web_page = web_page
+        for hour in ['00', '06', '12', '18']:
+            wayback_timestamp = f'{year_str}{month_str}{first_of_month}{hour}3000'
+            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
+            file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
+            all_file_names.append(file_name)
+            save_wordcloud(wayback_web_page, file_name,
+                           f'{web_page} on {year_str}-{month_str}-{first_of_month}')
+    gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
+    make_gif(dir_name, gif_file_name)
+
+
 if __name__ == '__main__':
     # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
     # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
-    month_in_summary('https://www.esquire.com/', "2021", "01", "esquire")
+    # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
+    year_in_summary('https://www.life.com/', "2020", "life_magazine")
+
