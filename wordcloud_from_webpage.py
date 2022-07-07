@@ -9,8 +9,9 @@ import requests
 from bs4 import BeautifulSoup
 
 stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
-              'vanity', 'newsmax', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday',
-              'minutes', 'hours', 'guardian', 'times', 'news', 'associated']
+              'vanity', 'newsmax', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+              'saturday', 'minutes', 'hours', 'guardian', 'times', 'news', 'associated',
+              'year\'s', 'their', 'first', 'people']
 
 
 def filter_words(words):
@@ -128,7 +129,7 @@ def make_gif(dir_name, gif_file_name):
     # dir of dir_nam
     dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
                 '.png' in x and os.path.isfile(os.path.join(dir_name, x))]
-    with imageio.get_writer(gif_file_name, mode='I', duration=0.3) as writer:
+    with imageio.get_writer(gif_file_name, mode='I', duration=0.4) as writer:
         for filename in dir_list:
             writer.append_data(imageio.imread_v2(filename))
 
@@ -159,4 +160,4 @@ if __name__ == '__main__':
     # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-    month_in_summary('https://news.google.com/', "2011", "11", "googlenews")
+    month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
