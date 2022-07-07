@@ -1,11 +1,16 @@
 import json
+import os
+import uuid
+
+import imageio as imageio
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from wordcloud import WordCloud, STOPWORDS
 import requests
 from bs4 import BeautifulSoup
 
 stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
-              'vanity', 'newsmax', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+              'vanity', 'newsmax', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday',
+              'minutes', 'hours']
 
 
 def filter_words(words):
@@ -15,7 +20,10 @@ def filter_words(words):
             continue
         if w.lower() in stop_words:
             continue
-        w2 = w.strip('0123456789.,\'=_:[]{}-')
+        # Skip words with &lrm; entity which shows up as a box character in wordcloud
+        if '\u200E' in w:
+            continue
+        w2 = w.strip('0123456789.,\'=_:[]{}-?!/')
         if w2 != w:
             filtered_dict[w2] = words[w]
         else:
@@ -103,11 +111,11 @@ def get_the_news_words():
 # article_url = 'https://www.vanityfair.com/style/2022/07/how-patti-labelle-commanded-the-essence-festival-2022-stage-with-just-one-louboutin'
 # article_url = 'https://www.vanityfair.com/style/society/2014/06/monica-lewinsky-humiliation-culture'
 # article_url = 'http://www.nytimes.com'
-article_url1 = 'https://web.archive.org/web/20220101003007/https://www.newsmax.com/'
-article_url2 = 'https://www.newsmax.com/'
+# article_url1 = 'https://web.archive.org/web/20220101003007/https://www.newsmax.com/'
+# article_url2 = 'https://www.newsmax.com/'
 
 
-def display_wordcoud(web_page):
+def display_wordcloud(web_page):
     word_counts = filter_words(get_words_general_parsing(web_page))
     print(word_counts)
     wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
@@ -116,13 +124,46 @@ def display_wordcoud(web_page):
     plt.show()
 
 
-def january_in_summary(web_page):
-    for day_of_month in range(1, 32):
+def save_wordcloud(web_page, file_name):
+    word_counts = filter_words(get_words_general_parsing(web_page))
+    wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
+    plt.imshow(wc, interpolation='bilInear')
+    plt.axis('off')
+    print(f'Saving wordcloud from {web_page} to file: {file_name}')
+    plt.savefig(file_name)
+
+
+def generate_unique_filename(prefix):
+    uid = uuid.uuid4().hex
+    return f'{prefix}_{uid}.png'
+
+
+def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
+    dir_name = f'{dir_name_prefix}_{year_str}{month_str}'
+    all_file_names = []
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
+    for day_of_month in range(1, 5):
         day_of_month_str = str(day_of_month)
         if len(day_of_month_str) == 1:
             day_of_month_str = '0' + day_of_month_str
-        wayback_web_page = f'https://web.archive.org/web/202201{day_of_month_str}003007/https://www.newsmax.com/'
-        display_wordcoud(wayback_web_page)
+        wayback_base_url = 'https://web.archive.org/web/'
+        target_web_page = web_page
+        for hour in ['00', '06', '09', '12', '15', '18']:
+            wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
+            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
+            file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
+            all_file_names.append(file_name)
+            save_wordcloud(wayback_web_page, file_name)
+    gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
+    print(f'Creating: {gif_file_name}')
+    with imageio.get_writer(gif_file_name, mode='I', frame_duration=0.4) as writer:
+        for filename in all_file_names:
+            image = imageio.imread_v2(filename)
+            writer.append_data(image)
 
 
-january_in_summary('https://www.newsmax.com/')
+# month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
+# month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
+# month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
+month_in_summary('https://news.google.com/', "2022", "06", "googlenews")
