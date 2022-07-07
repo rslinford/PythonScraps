@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 stop_words = ['three', 'after', 'which', 'about', 'might', 'would', 'could', 'every', 'really', 'years',
               'vanity', 'newsmax', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
               'saturday', 'minutes', 'hours', 'guardian', 'times', 'news', 'associated',
-              'year\'s', 'their', 'first', 'people']
+              'year\'s', 'their', 'first', 'people', 'movie', 'esquire', 'continue', 'reading']
 
 
 def filter_words(words):
@@ -58,6 +58,13 @@ def get_the_vanity_words_custom_parsing(article_address):
     return word_dict
 
 
+def only_alpha_ascii_chars(word):
+    for c in word:
+        if c < 'A' or c > 'z' or ('Z' < c < 'a'):
+            return False
+    return True
+
+
 # Parsing not customized, reads entire page
 def get_words_general_parsing(article_address):
     print(f'Requesting: {article_address}')
@@ -66,12 +73,12 @@ def get_words_general_parsing(article_address):
     word_dict = dict()
     words = soup.text.split(" ")
     for w in words:
+        w = w.strip('0123456789.,\'*+\n')
         if len(w) < 5:
             continue
         if w.lower() in stop_words:
             continue
-        w = w.strip('0123456789.,\'*+\n')
-        if '\n' in w or '_' in w or '=' in w or '’' in w:
+        if not only_alpha_ascii_chars(w):
             continue
         if w in word_dict.keys():
             word_dict[w] += 1
@@ -160,4 +167,5 @@ if __name__ == '__main__':
     # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-    month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
+    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
+    month_in_summary('https://www.esquire.com/', "2021", "01", "esquire")
