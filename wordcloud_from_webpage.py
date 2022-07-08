@@ -138,7 +138,7 @@ def make_gif(dir_name, gif_file_name):
     # dir of dir_nam
     dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
                 '.png' in x and os.path.isfile(os.path.join(dir_name, x))]
-    with imageio.get_writer(gif_file_name, mode='I', duration=0.50S) as writer:
+    with imageio.get_writer(gif_file_name, mode='I', duration=0.5) as writer:
         for filename in dir_list:
             writer.append_data(imageio.imread_v2(filename))
 
