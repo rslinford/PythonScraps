@@ -11,6 +11,9 @@ from bs4 import BeautifulSoup
 # The Wayback Machine base address
 wayback_base_url = 'https://web.archive.org/web/'
 
+# Characters to be stripped before word is checked against stop list
+strip_chars = '0123456789.,\'=_:[]{}-?!/'
+
 stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'esquire', 'every',
               'first', 'friday', 'greatest', 'guardian', 'hours', 'iconic', 'issue', 'might', 'minutes',
               'model', 'monday', 'movie', 'movies', 'news', 'newsmax', 'people', 'photographs', 'picture',
@@ -29,7 +32,7 @@ def filter_words(words):
             continue
         if w.lower() in stop_words:
             continue
-        w2 = w.strip('0123456789.,\'=_:[]{}-?!/')
+        w2 = w.strip(strip_chars)
         if w2 != w:
             filtered_dict[w2] = words[w]
         else:
@@ -53,13 +56,18 @@ def get_words_general_parsing(article_address):
     word_dict = dict()
     words = soup.text.split(" ")
     for w in words:
-        w = w.strip('0123456789.,\'*+\n')
+        # Strip 'garbage' characters from candidate word
+        w = w.strip(strip_chars)
+        # Candidate word must be 5 or longer
         if len(w) < 5:
             continue
+        # Candidate must not be stop words
         if w.lower() in stop_words:
             continue
+        # Candidate must contain Alpha chars only
         if not only_alpha_ascii_chars(w):
             continue
+        # Tally the word that finally passes
         if w in word_dict.keys():
             word_dict[w] += 1
         else:
