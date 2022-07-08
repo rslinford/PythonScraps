@@ -143,16 +143,16 @@ def make_gif(dir_name, gif_file_name):
             writer.append_data(imageio.imread_v2(filename))
 
 
+wayback_base_url = 'https://web.archive.org/web/'
+
+
 def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
     dir_name = f'{dir_name_prefix}_{year_str}{month_str}'
     all_file_names = []
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     for day_of_month in range(1, 28):
-        day_of_month_str = str(day_of_month)
-        if len(day_of_month_str) == 1:
-            day_of_month_str = '0' + day_of_month_str
-        wayback_base_url = 'https://web.archive.org/web/'
+        day_of_month_str = f'{day_of_month:02}'
         target_web_page = web_page
         for hour in ['00', '06', '12', '18']:
             wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
@@ -173,10 +173,7 @@ def year_in_summary(web_page, year_str, dir_name_prefix):
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     for month in range(1, 12):
-        month_str = str(month)
-        if len(month_str) == 1:
-            month_str = '0' + month_str
-        wayback_base_url = 'https://web.archive.org/web/'
+        month_str = f'{month:02}'
         target_web_page = web_page
         for hour in ['00', '06', '12', '18']:
             wayback_timestamp = f'{year_str}{month_str}{first_of_month}{hour}3000'
@@ -194,5 +191,5 @@ if __name__ == '__main__':
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
     # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
-    # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
-    year_in_summary('https://news.google.com/', "2021", "google_news_year")
+    month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
+    # year_in_summary('https://news.google.com/', "2021", "google_news_year")
