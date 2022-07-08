@@ -8,7 +8,7 @@ from wordcloud import WordCloud, STOPWORDS
 import requests
 from bs4 import BeautifulSoup
 
-C# The Wayback Machine base address
+# The Wayback Machine base address
 wayback_base_url = 'https://web.archive.org/web/'
 
 stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'esquire', 'every',
@@ -44,7 +44,8 @@ def only_alpha_ascii_chars(word):
     return True
 
 
-# Parsing not customized, reads entire page
+# Parsing not customized to any web-site. Attempts to get
+# all text from web page.
 def get_words_general_parsing(article_address):
     print(f'Requesting: {article_address}')
     r = requests.get(article_address)
@@ -121,7 +122,7 @@ def get_the_vanity_words_custom_parsing(article_address):
 
 # Shows the plot in a pop-up window
 def display_wordcloud(web_page):
-    word_counts = filter_words(get_words_general_parsing(web_page))
+    word_counts = get_words_general_parsing(web_page)
     print(word_counts)
     wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
     plt.imshow(wc, interpolation='bilInear')
@@ -131,7 +132,7 @@ def display_wordcloud(web_page):
 
 # Saves plot from web_page as an image with a title
 def save_wordcloud(web_page, file_name, title):
-    word_counts = filter_words(get_words_general_parsing(web_page))
+    word_counts = get_words_general_parsing(web_page)
     wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
     plt.imshow(wc, interpolation='bilInear')
     plt.axis("off")
@@ -179,7 +180,6 @@ def year_in_summary(web_page, year_str, dir_name_prefix):
     # Target days: the first of each month
     first_of_month = '01'
     dir_name = f'{dir_name_prefix}_{year_str}{first_of_month}'
-    all_file_names = []
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     for month in range(1, 12):
@@ -189,7 +189,6 @@ def year_in_summary(web_page, year_str, dir_name_prefix):
             wayback_timestamp = f'{year_str}{month_str}{first_of_month}{hour}3000'
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
-            all_file_names.append(file_name)
             save_wordcloud(wayback_web_page, file_name,
                            f'{web_page} on {year_str}-{month_str}-{first_of_month}')
     gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
