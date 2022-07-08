@@ -8,6 +8,9 @@ from wordcloud import WordCloud, STOPWORDS
 import requests
 from bs4 import BeautifulSoup
 
+C# The Wayback Machine base address
+wayback_base_url = 'https://web.archive.org/web/'
+
 stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'esquire', 'every',
               'first', 'friday', 'greatest', 'guardian', 'hours', 'iconic', 'issue', 'might', 'minutes',
               'model', 'monday', 'movie', 'movies', 'news', 'newsmax', 'people', 'photographs', 'picture',
@@ -16,6 +19,9 @@ stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'e
               "year's", 'years']
 
 
+# Wordcloud includes words that are 5 characters or longer. Stopwords are checked. And 'weird'
+# characters are stripped.
+#
 def filter_words(words):
     filtered_dict = dict()
     for w in words.keys():
@@ -23,41 +29,12 @@ def filter_words(words):
             continue
         if w.lower() in stop_words:
             continue
-        # Skip words with &lrm; entity which shows up as a box character in wordcloud
-        if '\u200E' in w:
-            continue
         w2 = w.strip('0123456789.,\'=_:[]{}-?!/')
         if w2 != w:
             filtered_dict[w2] = words[w]
         else:
             filtered_dict[w] = words[w]
     return filtered_dict
-
-
-# Parsing customized, article extracted from its JSON wrapper
-def get_the_vanity_words_custom_parsing(article_address):
-    r = requests.get(article_address)
-    soup = BeautifulSoup(r.text, features="lxml")
-    word_dict = dict()
-    for x in soup.find_all(type="application/ld+json"):
-        j = json.loads(x.text)
-        key = 'articleBody'
-        if key in j.keys():
-            value = j[key]
-            words = value.split(" ")
-            for w in words:
-                if len(w) < 5:
-                    continue
-                if w.lower() in stop_words:
-                    continue
-                w = w.strip('0123456789.,\'*+\n')
-                if '\n' in w or '_' in w or '=' in w or '’' in w:
-                    continue
-                if w in word_dict.keys():
-                    word_dict[w] += 1
-                else:
-                    word_dict[w] = 1
-    return word_dict
 
 
 def only_alpha_ascii_chars(word):
@@ -89,13 +66,15 @@ def get_words_general_parsing(article_address):
     return word_dict
 
 
-# Words from the times
+# Custom parsing for the NY Times. Currently not used. Included here
+# as an example of targeted content extraction.
 def get_the_news_words():
     base_url = 'http://www.nytimes.com'
     r = requests.get(base_url)
     soup = BeautifulSoup(r.text, features="lxml")
 
     summary_list = []
+    # Target the article summaries. This is specific to the NY Time website.
     for summary in soup.find_all(class_="summary-class"):
         summary_list.append(summary.text)
     words = dict()
@@ -110,6 +89,37 @@ def get_the_news_words():
     return filter_words(words)
 
 
+# Parsing customized for Vanity Fair which packs the entire article in JSON wrapper.
+# This function isn't being used at the moment. It's here as another example of
+# custom parsing.
+def get_the_vanity_words_custom_parsing(article_address):
+    r = requests.get(article_address)
+    soup = BeautifulSoup(r.text, features="lxml")
+    word_dict = dict()
+    # Extract JSON via the type attribute specific to Vanity Fair
+    for x in soup.find_all(type="application/ld+json"):
+        # Convert JSON to a Python dict
+        j = json.loads(x.text)
+        key = 'articleBody'
+        if key in j.keys():
+            value = j[key]
+            words = value.split(" ")
+            for w in words:
+                if len(w) < 5:
+                    continue
+                if w.lower() in stop_words:
+                    continue
+                w = w.strip('0123456789.,\'*+\n')
+                if '\n' in w or '_' in w or '=' in w or '’' in w:
+                    continue
+                if w in word_dict.keys():
+                    word_dict[w] += 1
+                else:
+                    word_dict[w] = 1
+    return word_dict
+
+
+# Shows the plot in a pop-up window
 def display_wordcloud(web_page):
     word_counts = filter_words(get_words_general_parsing(web_page))
     print(word_counts)
@@ -119,6 +129,7 @@ def display_wordcloud(web_page):
     plt.show()
 
 
+# Saves plot from web_page as an image with a title
 def save_wordcloud(web_page, file_name, title):
     word_counts = filter_words(get_words_general_parsing(web_page))
     wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
@@ -129,11 +140,13 @@ def save_wordcloud(web_page, file_name, title):
     plt.savefig(file_name)
 
 
+# Used in file names to prevent name conflicts
 def generate_unique_filename(prefix):
     uid = uuid.uuid4().hex
     return f'{prefix}_{uid}.png'
 
 
+# Makes an animated GIF from all the PNG files in dir_name
 def make_gif(dir_name, gif_file_name):
     # dir of dir_nam
     dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
@@ -141,9 +154,6 @@ def make_gif(dir_name, gif_file_name):
     with imageio.get_writer(gif_file_name, mode='I', duration=0.5) as writer:
         for filename in dir_list:
             writer.append_data(imageio.imread_v2(filename))
-
-
-wayback_base_url = 'https://web.archive.org/web/'
 
 
 def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
@@ -191,5 +201,6 @@ if __name__ == '__main__':
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
     # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
-    month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
+    # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
+    year_in_summary('https://www.life.com/', "2021", "life_magazine_year")
     # year_in_summary('https://news.google.com/', "2021", "google_news_year")
