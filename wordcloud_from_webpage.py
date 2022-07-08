@@ -15,6 +15,7 @@ stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'e
               'thursday', 'times', 'tuesday', 'vanity', 'wednesday', 'which', 'would',
               "year's", 'years']
 
+
 def filter_words(words):
     filtered_dict = dict()
     for w in words.keys():
@@ -137,7 +138,7 @@ def make_gif(dir_name, gif_file_name):
     # dir of dir_nam
     dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
                 '.png' in x and os.path.isfile(os.path.join(dir_name, x))]
-    with imageio.get_writer(gif_file_name, mode='I', duration=0.4) as writer:
+    with imageio.get_writer(gif_file_name, mode='I', duration=0.50S) as writer:
         for filename in dir_list:
             writer.append_data(imageio.imread_v2(filename))
 
@@ -194,5 +195,4 @@ if __name__ == '__main__':
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
     # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
     # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
-    year_in_summary('https://www.life.com/', "2020", "life_magazine")
-
+    year_in_summary('https://news.google.com/', "2021", "google_news_year")
