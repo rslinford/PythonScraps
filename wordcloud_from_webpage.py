@@ -24,7 +24,6 @@ stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'e
 
 # Wordcloud includes words that are 5 characters or longer. Stopwords are checked. And 'weird'
 # characters are stripped.
-#
 def filter_words(words):
     filtered_dict = dict()
     for w in words.keys():
@@ -75,8 +74,9 @@ def get_words_general_parsing(article_address):
     return word_dict
 
 
-# Custom parsing for the NY Times. Currently not used. Included here
-# as an example of targeted content extraction.
+# Custom parsing for the NY Times. Not used.
+# Included here as an example of targeted content
+# extraction.
 def get_the_news_words():
     base_url = 'http://www.nytimes.com'
     r = requests.get(base_url)
@@ -138,15 +138,21 @@ def display_wordcloud(web_page):
     plt.show()
 
 
-# Saves plot from web_page as an image with a title
-def save_wordcloud(web_page, file_name, title):
+# Create the plot and save it. Optionally a test_run=True means nothing gets saved, only shown on screen.
+def create_wordcloud(web_page, file_name, title, test_run=False):
     word_counts = get_words_general_parsing(web_page)
-    wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
+    wc = WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
+                   width=1000, height=600, scale=1.5, colormap='YlGnBu'
+                   ).generate_from_frequencies(word_counts)
     plt.imshow(wc, interpolation='bilInear')
     plt.axis("off")
     plt.title(title)
-    print(f'Saving wordcloud from {web_page} to file: {file_name}')
-    plt.savefig(file_name)
+    if test_run:
+        print(f'Showing wordcloud from {web_page} to file: {file_name}')
+        plt.show()
+    else:
+        print(f'Saving wordcloud from {web_page} to file: {file_name}')
+        plt.savefig(file_name)
 
 
 # Used in file names to prevent name conflicts
@@ -157,7 +163,8 @@ def generate_unique_filename(prefix):
 
 # Makes an animated GIF from all the PNG files in dir_name
 def make_gif(dir_name, gif_file_name):
-    # dir of dir_nam
+    print(f'Creating {gif_file_name} from PNG files in {dir_name}')
+    # Get directory listing with each file name prepended with dir_name
     dir_list = [os.path.join(dir_name, x) for x in sorted(os.listdir(dir_name)) if
                 '.png' in x and os.path.isfile(os.path.join(dir_name, x))]
     with imageio.get_writer(gif_file_name, mode='I', duration=0.5) as writer:
@@ -165,49 +172,55 @@ def make_gif(dir_name, gif_file_name):
             writer.append_data(imageio.imread_v2(filename))
 
 
-def month_in_summary(web_page, year_str, month_str, dir_name_prefix):
+# Does the live version of the web-site instead of from the Wayback Machine
+def live_page_summary(web_page):
+    display_wordcloud(web_page)
+
+
+def month_in_summary(web_page, year_str, month_str, dir_name_prefix, test_run=False):
     dir_name = f'{dir_name_prefix}_{year_str}{month_str}'
-    all_file_names = []
-    if not os.path.isdir(dir_name):
+    if not os.path.isdir(dir_name) and not test_run:
         os.mkdir(dir_name)
-    for day_of_month in range(1, 28):
+    for day_of_month in range(1, 29):
         day_of_month_str = f'{day_of_month:02}'
-        target_web_page = web_page
         for hour in ['00', '06', '12', '18']:
             wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
-            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
+            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
-            all_file_names.append(file_name)
-            save_wordcloud(wayback_web_page, file_name,
-                           f'{web_page} on {year_str}-{month_str}-{day_of_month_str}')
-    gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
-    make_gif(dir_name, gif_file_name)
+            create_wordcloud(wayback_web_page,
+                             file_name, f'{web_page} on {year_str}-{month_str}-{day_of_month_str}',
+                             test_run)
+    if not test_run:
+        gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
+        make_gif(dir_name, gif_file_name)
 
 
-def year_in_summary(web_page, year_str, dir_name_prefix):
+def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
     # Target days: the first of each month
     first_of_month = '01'
     dir_name = f'{dir_name_prefix}_{year_str}{first_of_month}'
-    if not os.path.isdir(dir_name):
+    if not os.path.isdir(dir_name) and not test_run:
         os.mkdir(dir_name)
-    for month in range(1, 12):
+    for month in range(1, 13):
         month_str = f'{month:02}'
-        target_web_page = web_page
         for hour in ['00', '06', '12', '18']:
             wayback_timestamp = f'{year_str}{month_str}{first_of_month}{hour}3000'
-            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{target_web_page}'
+            wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
-            save_wordcloud(wayback_web_page, file_name,
-                           f'{web_page} on {year_str}-{month_str}-{first_of_month}')
-    gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
-    make_gif(dir_name, gif_file_name)
+            create_wordcloud(wayback_web_page,
+                             file_name, f'{web_page} on {year_str}-{month_str}-{first_of_month}',
+                             test_run)
+    if not test_run:
+        gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
+        make_gif(dir_name, gif_file_name)
 
 
 if __name__ == '__main__':
-    # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax")
+    # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax_month", test_run=False)
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
     # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews")
+    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews", test_run=False)
     # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
-    year_in_summary('https://www.life.com/', "2021", "life_magazine_year")
+    # year_in_summary('https://www.life.com/', "2021", "life_magazine_year", test_run=False)
     # year_in_summary('https://news.google.com/', "2021", "google_news_year")
+    live_page_summary('https://news.google.com/')
