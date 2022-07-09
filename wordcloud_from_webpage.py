@@ -46,6 +46,16 @@ def only_alpha_ascii_chars(word):
     return True
 
 
+def is_cammel_case(word):
+    has_lower_case = False
+    for c in word:
+        if 'a' <= c <= 'z':
+            has_lower_case = True
+        if 'A' <= c <= 'Z' and has_lower_case:
+            return True
+    return False
+
+
 # Parsing not customized to any web-site. Attempts to get
 # all text from web page.
 def get_words_general_parsing(article_address):
@@ -59,6 +69,9 @@ def get_words_general_parsing(article_address):
         w = w.strip(strip_chars)
         # Candidate word must be 5 or longer
         if len(w) < 5:
+            continue
+        # Candidate must not be cammel case
+        if is_cammel_case(w):
             continue
         # Candidate must not be stop words
         if w.lower() in stop_words:
@@ -128,22 +141,26 @@ def get_the_vanity_words_custom_parsing(article_address):
     return word_dict
 
 
+def generate_from_freq(word_counts):
+    return WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
+                     width=900, height=500, colormap='YlGnBu', max_words=400
+                     ).generate_from_frequencies(word_counts)
+
+
 # Shows the plot in a pop-up window
 def display_wordcloud(web_page):
     word_counts = get_words_general_parsing(web_page)
     print(word_counts)
-    wc = WordCloud(stopwords=STOPWORDS, collocations=True).generate_from_frequencies(word_counts)
+    wc = generate_from_freq(word_counts)
     plt.imshow(wc, interpolation='bilInear')
     plt.axis('off')
     plt.show()
 
 
 # Create the plot and save it. Optionally a test_run=True means nothing gets saved, only shown on screen.
-def create_wordcloud(web_page, file_name, title, test_run=False):
+def save_wordcloud(web_page, file_name, title, test_run=False):
     word_counts = get_words_general_parsing(web_page)
-    wc = WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
-                   width=1000, height=600, scale=1.5, colormap='YlGnBu'
-                   ).generate_from_frequencies(word_counts)
+    wc = generate_from_freq(word_counts)
     plt.imshow(wc, interpolation='bilInear')
     plt.axis("off")
     plt.title(title)
@@ -187,9 +204,8 @@ def month_in_summary(web_page, year_str, month_str, dir_name_prefix, test_run=Fa
             wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
-            create_wordcloud(wayback_web_page,
-                             file_name, f'{web_page} on {year_str}-{month_str}-{day_of_month_str}',
-                             test_run)
+            save_wordcloud(wayback_web_page, file_name, f'{web_page} on {year_str}-{month_str}-{day_of_month_str}',
+                           test_run)
     if not test_run:
         gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
         make_gif(dir_name, gif_file_name)
@@ -207,9 +223,8 @@ def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
             wayback_timestamp = f'{year_str}{month_str}{first_of_month}{hour}3000'
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
-            create_wordcloud(wayback_web_page,
-                             file_name, f'{web_page} on {year_str}-{month_str}-{first_of_month}',
-                             test_run)
+            save_wordcloud(wayback_web_page, file_name, f'{web_page} on {year_str}-{month_str}-{first_of_month}',
+                           test_run)
     if not test_run:
         gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
         make_gif(dir_name, gif_file_name)
@@ -218,9 +233,10 @@ def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
 if __name__ == '__main__':
     # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax_month", test_run=False)
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
-    # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews", test_run=False)
+    month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
+    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews", test_run=True)
     # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
-    # year_in_summary('https://www.life.com/', "2021", "life_magazine_year", test_run=False)
+    # year_in_summary('https://www.life.com/', "2021", "life_magazine_year", test_run=True)
     # year_in_summary('https://news.google.com/', "2021", "google_news_year")
-    live_page_summary('https://news.google.com/')
+    # live_page_summary('https://news.google.com/')
+    # live_page_summary('https://www.nytimes.com/')
