@@ -100,14 +100,12 @@ if __name__ == '__main__':
 
     # Load dataset into memory for faster processing
     train_dataset = train_dataset.cache()
-
     test_dataset = test_dataset.cache()
+
     # Take a single image, and remove the color dimension by reshaping
     for image, label in test_dataset.take(1):
-        pass
-
-    image = image.numpy().reshape((28, 28))
-    show_image(image)
+        image = image.numpy().reshape((28, 28))
+        show_image(image)
     show_5by5_images(test_dataset)
 
     model = tf.keras.Sequential([
