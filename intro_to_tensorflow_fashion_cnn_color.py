@@ -86,6 +86,49 @@ def plotImages(images_arr):
     plt.show()
 
 
+image_gen = ImageDataGenerator(rescale=1. / 255, horizontal_flip=True)
+
+train_data_gen = image_gen.flow_from_directory(batch_size=BATCH_SIZE,
+                                               directory=train_dir,
+                                               shuffle=True,
+                                               target_size=(IMG_SHAPE, IMG_SHAPE))
+
+augmented_images = [train_data_gen[0][0][0] for i in range(5)]
+plotImages(augmented_images)
+
+image_gen = ImageDataGenerator(rescale=1. / 255, zoom_range=0.5)
+
+train_data_gen = image_gen.flow_from_directory(batch_size=BATCH_SIZE,
+                                               directory=train_dir,
+                                               shuffle=True,
+                                               target_size=(IMG_SHAPE, IMG_SHAPE))
+
+augmented_images = [train_data_gen[0][0][0] for i in range(5)]
+plotImages(augmented_images)
+
+image_gen_train = ImageDataGenerator(
+    rescale=1. / 255,
+    rotation_range=40,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest')
+
+train_data_gen = image_gen_train.flow_from_directory(batch_size=BATCH_SIZE,
+                                                     directory=train_dir,
+                                                     shuffle=True,
+                                                     target_size=(IMG_SHAPE, IMG_SHAPE),
+                                                     class_mode='binary')
+
+image_gen_val = ImageDataGenerator(rescale=1. / 255)
+
+val_data_gen = image_gen_val.flow_from_directory(batch_size=BATCH_SIZE,
+                                                 directory=validation_dir,
+                                                 target_size=(IMG_SHAPE, IMG_SHAPE),
+                                                 class_mode='binary')
+
 plotImages(sample_training_images[:5])  # Plot images 0-4
 
 # Model Creation
@@ -102,6 +145,7 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.Conv2D(128, (3, 3), activation='relu'),
     tf.keras.layers.MaxPooling2D(2, 2),
 
+    tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(512, activation='relu'),
     tf.keras.layers.Dense(2)
@@ -132,7 +176,7 @@ val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-epochs_range = range(EPOCHS)
+epochs_range = range(epochs)
 
 plt.figure(figsize=(8, 8))
 plt.subplot(1, 2, 1)
@@ -146,7 +190,6 @@ plt.plot(epochs_range, loss, label='Training Loss')
 plt.plot(epochs_range, val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
-plt.savefig('./foo.png')
 plt.show()
 
 print(f"Elapsed time: {time.time() - start_time}")
