@@ -26,7 +26,7 @@ zip_dir_base = os.path.dirname(zip_dir)
 base_dir = os.path.join(os.path.dirname(zip_dir), 'cats_and_dogs_filtered')
 train_dir = os.path.join(base_dir, 'train')
 validation_dir = os.path.join(base_dir, 'validation')
-print(f'Base directory for downloads{base_dir}')
+print(f'Base directory for downloads {base_dir}')
 
 train_cats_dir = os.path.join(train_dir, 'cats')  # directory with our training cat pictures
 train_dogs_dir = os.path.join(train_dir, 'dogs')  # directory with our training dog pictures
@@ -75,7 +75,8 @@ val_data_gen = validation_image_generator.flow_from_directory(batch_size=BATCH_S
 sample_training_images, _ = next(train_data_gen)
 
 
-# This function will plot images in the form of a grid with 1 row and 5 columns where images are placed in each column.
+# This function will plot images in the form of a grid with 1 row
+# and 5 columns where images are placed in each column.
 def plotImages(images_arr):
     fig, axes = plt.subplots(1, 5, figsize=(20, 20))
     axes = axes.flatten()
@@ -124,7 +125,7 @@ history = model.fit_generator(
     validation_steps=int(np.ceil(total_val / float(BATCH_SIZE)))
 )
 
-# Visualizing Result of Traing
+# Visualizing Result of Training
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
 
