@@ -1,4 +1,6 @@
+import glob
 import os
+import shutil
 import time
 
 import tensorflow as tf
@@ -18,42 +20,58 @@ logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
 # Data loading from URL
-_URL = 'https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip'
-zip_dir = tf.keras.utils.get_file('cats_and_dogs_filterted.zip', origin=_URL, extract=True)
-zip_dir_base = os.path.dirname(zip_dir)
+_URL = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
+zip_file = tf.keras.utils.get_file(origin=_URL, fname="flower_photos.tgz", extract=True)
+base_dir = os.path.join(os.path.dirname(zip_file), 'flower_photos')
 
-# Pathing for data downloads
-base_dir = os.path.join(os.path.dirname(zip_dir), 'cats_and_dogs_filtered')
+classes = ['roses', 'daisy', 'dandelion', 'sunflowers', 'tulips']
+
+for flower_class in classes:
+    img_path = os.path.join(base_dir, flower_class)
+    images = glob.glob(img_path + '/*.jpg')
+    print(f"{flower_class}: {images} Images")
+    train, val = images[:round(len(images) * 0.8)], images[round(len(images) * 0.8):]
+
+    training_dir = os.path.join(base_dir, 'train', flower_class)
+    if not os.path.exists(training_dir):
+        os.makedirs(training_dir)
+        for t in train:
+            shutil.move(t, training_dir)
+
+
+    validation_dir = os.path.join(base_dir, 'val', flower_class)
+    if not os.path.exists(validation_dir):
+        os.makedirs(validation_dir)
+        for v in val:
+            shutil.move(v, validation_dir)
+
+
+
 train_dir = os.path.join(base_dir, 'train')
-validation_dir = os.path.join(base_dir, 'validation')
+val_dir = os.path.join(base_dir, 'val')
 print(f'Base directory for downloads {base_dir}')
-
-train_cats_dir = os.path.join(train_dir, 'cats')  # directory with our training cat pictures
-train_dogs_dir = os.path.join(train_dir, 'dogs')  # directory with our training dog pictures
-validation_cats_dir = os.path.join(validation_dir, 'cats')  # directory with our validation cat pictures
-validation_dogs_dir = os.path.join(validation_dir, 'dogs')  # directory with our validation dog pictures
-
-# Count training and validation images that were downloaded
-num_cats_tr = len(os.listdir(train_cats_dir))
-num_dogs_tr = len(os.listdir(train_dogs_dir))
-
-num_cats_val = len(os.listdir(validation_cats_dir))
-num_dogs_val = len(os.listdir(validation_dogs_dir))
-
-total_train = num_cats_tr + num_dogs_tr
-total_val = num_cats_val + num_dogs_val
-
-print('total training cat images:', num_cats_tr)
-print('total training dog images:', num_dogs_tr)
-
-print('total validation cat images:', num_cats_val)
-print('total validation dog images:', num_dogs_val)
-print("--")
-print("Total training images:", total_train)
-print("Total validation images:", total_val)
 
 BATCH_SIZE = 100  # Number of training examples to process before updating our models variables
 IMG_SHAPE = 150  # Our training data consists of images with width of 150 pixels and height of 150 pixels
+
+total_val = 0
+total_train = 0
+for flower in classes:
+
+    train_flower_dir = os.path.join(train_dir, flower)
+    val_flower_dir = os.path.join(val_dir, flower)
+
+    # Count training and validation images that were downloaded
+    num_flower_train = len(os.listdir(train_flower_dir))
+    num_flower_val = len(os.listdir(val_flower_dir))
+    total_train += num_flower_train
+    total_val += num_flower_val
+
+print(f'total training {flower} images: {total_train}')
+print(f'total validation {flower} images:', total_val)
+
+quit()
+
 
 # Data Preparation
 train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
