@@ -38,28 +38,25 @@ for flower_class in classes:
         for t in train:
             shutil.move(t, training_dir)
 
-
     validation_dir = os.path.join(base_dir, 'val', flower_class)
     if not os.path.exists(validation_dir):
         os.makedirs(validation_dir)
         for v in val:
             shutil.move(v, validation_dir)
 
-
-
-train_dir = os.path.join(base_dir, 'train')
-val_dir = os.path.join(base_dir, 'val')
+train_base_dir = os.path.join(base_dir, 'train')
+val_base_dir = os.path.join(base_dir, 'val')
 print(f'Base directory for downloads {base_dir}')
 
 BATCH_SIZE = 100  # Number of training examples to process before updating our models variables
 IMG_SHAPE = 150  # Our training data consists of images with width of 150 pixels and height of 150 pixels
 
+# Tally actual number of training and validation images on disk
 total_val = 0
 total_train = 0
 for flower in classes:
-
-    train_flower_dir = os.path.join(train_dir, flower)
-    val_flower_dir = os.path.join(val_dir, flower)
+    train_flower_dir = os.path.join(train_base_dir, flower)
+    val_flower_dir = os.path.join(val_base_dir, flower)
 
     # Count training and validation images that were downloaded
     num_flower_train = len(os.listdir(train_flower_dir))
@@ -67,87 +64,33 @@ for flower in classes:
     total_train += num_flower_train
     total_val += num_flower_val
 
-print(f'total training {flower} images: {total_train}')
-print(f'total validation {flower} images:', total_val)
-
-quit()
-
+print(f'total training images: {total_train}')
+print(f'total validation images:', total_val)
 
 # Data Preparation
-train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
-validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
+image_gen_augment = ImageDataGenerator(rescale=1. / 255,
+                                       rotation_range=40,
+                                       width_shift_range=0.2,
+                                       height_shift_range=0.2,
+                                       shear_range=0.2,
+                                       zoom_range=0.2,
+                                       horizontal_flip=True,
+                                       fill_mode='nearest')
 
-# Generators load images from disk, apply rescaling, and resize images
-train_data_gen = train_image_generator.flow_from_directory(batch_size=BATCH_SIZE,
-                                                           directory=train_dir,
-                                                           shuffle=True,
-                                                           target_size=(IMG_SHAPE, IMG_SHAPE),  # (150,150)
-                                                           class_mode='binary')
+image_gen_normal = ImageDataGenerator(rescale=1. / 255)
 
-val_data_gen = validation_image_generator.flow_from_directory(batch_size=BATCH_SIZE,
-                                                              directory=validation_dir,
-                                                              shuffle=False,
-                                                              target_size=(IMG_SHAPE, IMG_SHAPE),  # (150,150)
-                                                              class_mode='binary')
-# Visualize Training Images
-sample_training_images, _ = next(train_data_gen)
+train_data_gen = flow_from_directory(image_gen_augment, train_base_dir, True)
+plotImages([train_data_gen[0][0][0] for i in range(5)])
 
+train_data_val = flow_from_directory(image_gen_normal, val_base_dir, False)
+plotImages([train_data_val[0][0][0] for i in range(5)])
 
-# This function will plot images in the form of a grid with 1 row
-# and 5 columns where images are placed in each column.
-def plotImages(images_arr):
-    fig, axes = plt.subplots(1, 5, figsize=(20, 20))
-    axes = axes.flatten()
-    for img, ax in zip(images_arr, axes):
-        ax.imshow(img)
-    plt.tight_layout()
-    plt.show()
+print(f'Training dir {train_base_dir}')
+print(f'Validation dir {val_base_dir}')
 
-
-image_gen = ImageDataGenerator(rescale=1. / 255, horizontal_flip=True)
-
-train_data_gen = image_gen.flow_from_directory(batch_size=BATCH_SIZE,
-                                               directory=train_dir,
-                                               shuffle=True,
-                                               target_size=(IMG_SHAPE, IMG_SHAPE))
-
-augmented_images = [train_data_gen[0][0][0] for i in range(5)]
-plotImages(augmented_images)
-
-image_gen = ImageDataGenerator(rescale=1. / 255, zoom_range=0.5)
-
-train_data_gen = image_gen.flow_from_directory(batch_size=BATCH_SIZE,
-                                               directory=train_dir,
-                                               shuffle=True,
-                                               target_size=(IMG_SHAPE, IMG_SHAPE))
-
-augmented_images = [train_data_gen[0][0][0] for i in range(5)]
-plotImages(augmented_images)
-
-image_gen_train = ImageDataGenerator(
-    rescale=1. / 255,
-    rotation_range=40,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest')
-
-train_data_gen = image_gen_train.flow_from_directory(batch_size=BATCH_SIZE,
-                                                     directory=train_dir,
-                                                     shuffle=True,
-                                                     target_size=(IMG_SHAPE, IMG_SHAPE),
-                                                     class_mode='binary')
-
-image_gen_val = ImageDataGenerator(rescale=1. / 255)
-
-val_data_gen = image_gen_val.flow_from_directory(batch_size=BATCH_SIZE,
-                                                 directory=validation_dir,
-                                                 target_size=(IMG_SHAPE, IMG_SHAPE),
-                                                 class_mode='binary')
-
-plotImages(sample_training_images[:5])  # Plot images 0-4
+train_data_gen = flow_from_directory(image_gen_augment, train_base_dir, True)
+val_data_gen = flow_from_directory(image_gen_normal, validation_dir, False)
+plotImages([train_data_gen[0][0][i] for i in range(5)])  # Plot images 0-4
 
 # Model Creation
 model = tf.keras.models.Sequential([
@@ -166,7 +109,7 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(512, activation='relu'),
-    tf.keras.layers.Dense(2)
+    tf.keras.layers.Dense(5)
 ])
 
 # Compile Model
@@ -178,7 +121,7 @@ model.compile(optimizer='adam',
 model.summary()
 
 # Train the Model
-EPOCHS = 100
+EPOCHS = 60
 history = model.fit_generator(
     train_data_gen,
     steps_per_epoch=int(np.ceil(total_train / float(BATCH_SIZE))),
