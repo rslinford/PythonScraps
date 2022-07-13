@@ -19,6 +19,23 @@ start_time = time.time()
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
+
+def flow_from_directory(image_data_generator, directory, shuffle):
+    return image_data_generator.flow_from_directory(batch_size=BATCH_SIZE,
+                                                    directory=directory,
+                                                    shuffle=shuffle,
+                                                    target_size=(IMG_SHAPE, IMG_SHAPE))
+
+
+def plotImages(images_arr):
+    fig, axes = plt.subplots(1, 5, figsize=(20, 20))
+    axes = axes.flatten()
+    for img, ax in zip(images_arr, axes):
+        ax.imshow(img)
+    plt.tight_layout()
+    plt.show()
+
+
 # Data loading from URL
 _URL = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
 zip_file = tf.keras.utils.get_file(origin=_URL, fname="flower_photos.tgz", extract=True)
@@ -48,7 +65,7 @@ train_base_dir = os.path.join(base_dir, 'train')
 val_base_dir = os.path.join(base_dir, 'val')
 print(f'Base directory for downloads {base_dir}')
 
-BATCH_SIZE = 100  # Number of training examples to process before updating our models variables
+BATCH_SIZE = 3  # Number of training examples to process before updating our models variables
 IMG_SHAPE = 150  # Our training data consists of images with width of 150 pixels and height of 150 pixels
 
 # Tally actual number of training and validation images on disk
@@ -77,6 +94,7 @@ image_gen_augment = ImageDataGenerator(rescale=1. / 255,
                                        horizontal_flip=True,
                                        fill_mode='nearest')
 
+
 image_gen_normal = ImageDataGenerator(rescale=1. / 255)
 
 train_data_gen = flow_from_directory(image_gen_augment, train_base_dir, True)
@@ -90,7 +108,7 @@ print(f'Validation dir {val_base_dir}')
 
 train_data_gen = flow_from_directory(image_gen_augment, train_base_dir, True)
 val_data_gen = flow_from_directory(image_gen_normal, validation_dir, False)
-plotImages([train_data_gen[0][0][i] for i in range(5)])  # Plot images 0-4
+plotImages([train_data_gen[i][0][0] for i in range(5)])  # Plot images 0-4
 
 # Model Creation
 model = tf.keras.models.Sequential([
@@ -148,9 +166,33 @@ plt.title('Training and Validation Accuracy')
 
 plt.subplot(1, 2, 2)
 plt.plot(epochs_range, loss, label='Training Loss')
+
 plt.plot(epochs_range, val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
+
+
+def plot_value_array(i, predictions_array, true_label):
+    predictions_array, true_label = predictions_array[i], true_label[i]
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    this_plot = plt.bar(range(10), predictions_array, color="#777777")
+    plt.ylim([0, 1])
+    predicted_label = np.argmax(predictions_array)
+
+    this_plot[predicted_label].set_color('red')
+    this_plot[true_label].set_color('blue')
+
+
+# Grab an image from the test dataset
+img = test_images[0]
+img = np.array([img])
+predictions_single = model.predict(img)
+
+print(predictions_single)
+plot_value_array(0, predictions_single, test_labels)
+_ = plt.xticks(range(10), class_names, rotation=45)
 
 print(f"Elapsed time: {time.time() - start_time}")
