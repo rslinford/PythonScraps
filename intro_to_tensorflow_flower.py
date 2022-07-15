@@ -22,22 +22,23 @@ base_dir = os.path.join(os.path.dirname(zip_file), 'flower_photos')
 classes = ['roses', 'daisy', 'dandelion', 'sunflowers', 'tulips']
 
 # Prints totals for downloaded images in each category of flower
-for cl in classes:
-    img_path = os.path.join(base_dir, cl)
+for flower_class in classes:
+    img_path = os.path.join(base_dir, flower_class)
     images = glob.glob(img_path + '/*.jpg')
-    print("{}: {} Images".format(cl, len(images)))
-    num_train = int(round(len(images) * 0.8))
-    train, val = images[:num_train], images[num_train:]
+    print(f"{flower_class}: {images} Images")
+    train, val = images[:round(len(images) * 0.8)], images[round(len(images) * 0.8):]
 
-    for t in train:
-        if not os.path.exists(os.path.join(base_dir, 'train', cl)):
-            os.makedirs(os.path.join(base_dir, 'train', cl))
-            shutil.move(t, os.path.join(base_dir, 'train', cl))
+    training_dir = os.path.join(base_dir, 'train', flower_class)
+    if not os.path.exists(training_dir):
+        os.makedirs(training_dir)
+        for t in train:
+            shutil.move(t, training_dir)
 
-    for v in val:
-        if not os.path.exists(os.path.join(base_dir, 'val', cl)):
-            os.makedirs(os.path.join(base_dir, 'val', cl))
-            shutil.move(v, os.path.join(base_dir, 'val', cl))
+    validation_dir = os.path.join(base_dir, 'val', flower_class)
+    if not os.path.exists(validation_dir):
+        os.makedirs(validation_dir)
+        for v in val:
+            shutil.move(v, validation_dir)
 
 print(f'Download base_dir {base_dir}')
 
