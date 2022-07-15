@@ -24,13 +24,11 @@ grace_hopper = tf.keras.utils.get_file('image.jpg',
 grace_hopper = Image.open(grace_hopper).resize((IMAGE_RES, IMAGE_RES))
 
 grace_hopper = np.array(grace_hopper) / 255.0
-grace_hopper.shape
 
 result = model.predict(grace_hopper[np.newaxis, ...])
-result.shape
 
 predicted_class = np.argmax(result[0], axis=-1)
-predicted_class
+
 
 labels_path = tf.keras.utils.get_file('ImageNetLabels.txt',
                                       'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt')
