@@ -7,9 +7,9 @@ youtube = build('youtube', 'v3', developerKey=api_key)
 
 request = youtube.channels().list(
     part='contentDetails',
-    forUsername='ASMRMagic'
+    forUsername='ScottLinford'
 )
 
 response = request.execute()
 s = repr(response)
-fp.format_pretty(s)
+print(fp.format_pretty_string(s))
