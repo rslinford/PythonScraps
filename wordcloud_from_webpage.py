@@ -1,25 +1,27 @@
 import json
 import os
+import time
 import uuid
 
 import imageio as imageio
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud, STOPWORDS
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from wordcloud import WordCloud, STOPWORDS
 
 # The Wayback Machine base address
 wayback_base_url = 'https://web.archive.org/web/'
 
 # Characters to be stripped before word is checked against stop list
-strip_chars = '0123456789.,\'=_:[]{}-?!/'
+strip_chars = '0123456789.,\'=_:[]{}-?!/<>"'
 
 stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'esquire', 'every',
               'first', 'friday', 'greatest', 'guardian', 'hours', 'iconic', 'issue', 'might', 'minutes',
               'model', 'monday', 'movie', 'movies', 'news', 'newsmax', 'people', 'photographs', 'picture',
               'reading', 'really', 'saturday', 'scenes', 'story', 'sunday', 'their', 'three',
               'thursday', 'times', 'tuesday', 'vanity', 'wednesday', 'which', 'would',
-              "year's", 'years']
+              "year's", 'years', 'google', 'months', 'seconds', 'internet', 'wayback']
 
 
 # Wordcloud includes words that are 5 characters or longer. Stopwords are checked. And 'weird'
@@ -32,6 +34,8 @@ def filter_words(words):
         if w.lower() in stop_words:
             continue
         w2 = w.strip(strip_chars)
+        if len(w2) < 5:
+            continue
         if w2 != w:
             filtered_dict[w2] = words[w]
         else:
@@ -111,6 +115,29 @@ def get_the_news_words():
     return filter_words(words)
 
 
+# Custom parsing for YouTube. Generic parsing gets 0 words.
+def get_the_youtube_words(web_address='https://www.youtube.com'):
+    browser = webdriver.Chrome()
+    browser.get(web_address)
+    browser.execute_script("window.scrollTo(0,500)")
+    time.sleep(2)
+    browser.execute_script("window.scrollTo(0,3000)")
+    time.sleep(7)
+    content = browser.page_source
+    browser.close()
+
+    # Target the article summaries. This is specific to the NY Time website.
+    words = dict()
+    for w in content.split(' '):
+        if not only_alpha_ascii_chars(w):
+            continue
+        if w in words.keys():
+            words[w] += 1
+        else:
+            words[w] = 1
+    return filter_words(words)
+
+
 # Parsing customized for Vanity Fair which packs the entire article in JSON wrapper.
 # This function isn't being used at the moment. It's here as another example of
 # custom parsing.
@@ -158,8 +185,8 @@ def display_wordcloud(web_page):
 
 
 # Create the plot and save it. Optionally a test_run=True means nothing gets saved, only shown on screen.
-def save_wordcloud(web_page, file_name, title, test_run=False):
-    word_counts = get_words_general_parsing(web_page)
+def save_wordcloud(web_page, file_name, title, test_run=False, get_words=get_words_general_parsing):
+    word_counts = get_words(web_page)
     wc = generate_from_freq(word_counts)
     plt.imshow(wc, interpolation='bilInear')
     plt.axis("off")
@@ -194,18 +221,23 @@ def live_page_summary(web_page):
     display_wordcloud(web_page)
 
 
-def month_in_summary(web_page, year_str, month_str, dir_name_prefix, test_run=False):
+def month_in_summary(web_page, year_str, month_str, dir_name_prefix, test_run=False,
+                     get_words=get_words_general_parsing):
     dir_name = f'{dir_name_prefix}_{year_str}{month_str}'
     if not os.path.isdir(dir_name) and not test_run:
         os.mkdir(dir_name)
     for day_of_month in range(1, 29):
         day_of_month_str = f'{day_of_month:02}'
-        for hour in ['00', '06', '12', '18']:
+        if test_run:
+            hours = ['06']
+        else:
+            hours = ['00', '06', '12', '18']
+        for hour in hours:
             wayback_timestamp = f'{year_str}{month_str}{day_of_month_str}{hour}3000'
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
             save_wordcloud(wayback_web_page, file_name, f'{web_page} on {year_str}-{month_str}-{day_of_month_str}',
-                           test_run)
+                           test_run, get_words)
     if not test_run:
         gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
         make_gif(dir_name, gif_file_name)
@@ -233,10 +265,11 @@ def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
 if __name__ == '__main__':
     # month_in_summary('https://www.newsmax.com/', "2022", "02", "newsmax_month", test_run=False)
     # month_in_summary('https://www.nytimes.com/', "2022", "02", "nytimes")
-    month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
-    # month_in_summary('https://news.google.com/', "2021", "01", "googlenews", test_run=True)
+    # month_in_summary('https://news.google.com/', "2022", "02", "googlenews")
+    # month_in_summary('https://news.google.com/', "2022", "07", "googlenews", test_run=True)
     # month_in_summary('https://www.life.com/', "2021", "06", "life_magazine")
     # year_in_summary('https://www.life.com/', "2021", "life_magazine_year", test_run=True)
     # year_in_summary('https://news.google.com/', "2021", "google_news_year")
     # live_page_summary('https://news.google.com/')
     # live_page_summary('https://www.nytimes.com/')
+    month_in_summary('https://www.youtube.com/', "2022", "06", "youtube", test_run=False, get_words=get_the_youtube_words)
