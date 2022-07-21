@@ -21,7 +21,7 @@ stop_words = ['about', 'after', 'associated', 'content', 'continue', 'could', 'e
               'model', 'monday', 'movie', 'movies', 'news', 'newsmax', 'people', 'photographs', 'picture',
               'reading', 'really', 'saturday', 'scenes', 'story', 'sunday', 'their', 'three',
               'thursday', 'times', 'tuesday', 'vanity', 'wednesday', 'which', 'would',
-              "year's", 'years', 'google', 'months', 'seconds', 'internet', 'wayback']
+              "year's", 'years', 'google', 'months', 'seconds', 'internet', 'wayback', 'democracy']
 
 
 # Wordcloud includes words that are 5 characters or longer. Stopwords are checked. And 'weird'
@@ -243,7 +243,8 @@ def month_in_summary(web_page, year_str, month_str, dir_name_prefix, test_run=Fa
         make_gif(dir_name, gif_file_name)
 
 
-def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
+def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False,
+                    get_words=get_words_general_parsing):
     # Target days: the first of each month
     first_of_month = '01'
     dir_name = f'{dir_name_prefix}_{year_str}{first_of_month}'
@@ -256,7 +257,7 @@ def year_in_summary(web_page, year_str, dir_name_prefix, test_run=False):
             wayback_web_page = f'{wayback_base_url}{wayback_timestamp}/{web_page}'
             file_name = os.path.join(dir_name, generate_unique_filename(wayback_timestamp))
             save_wordcloud(wayback_web_page, file_name, f'{web_page} on {year_str}-{month_str}-{first_of_month}',
-                           test_run)
+                           test_run, get_words)
     if not test_run:
         gif_file_name = os.path.join(dir_name, f'{dir_name_prefix}_{year_str}{month_str}.gif')
         make_gif(dir_name, gif_file_name)
@@ -272,4 +273,6 @@ if __name__ == '__main__':
     # year_in_summary('https://news.google.com/', "2021", "google_news_year")
     # live_page_summary('https://news.google.com/')
     # live_page_summary('https://www.nytimes.com/')
-    month_in_summary('https://www.youtube.com/', "2022", "06", "youtube", test_run=False, get_words=get_the_youtube_words)
+    # month_in_summary('https://www.youtube.com/', "2022", "06", "youtube", test_run=False, get_words=get_the_youtube_words)
+    # month_in_summary('https://www.democracynow.org/', "2022", "06", "democracynow", test_run=False)
+    year_in_summary('https://www.democracynow.org/', "2021", "democracynow", test_run=False, get_words=get_words_general_parsing)
