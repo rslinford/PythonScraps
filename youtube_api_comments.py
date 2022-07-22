@@ -7,7 +7,9 @@ api_key = os.environ.get('api_key')
 
 stop_words = ['this', 'your', 'that', 'video', 'videos', 'with',
               'like', 'from', 'when', 'they', 'just', 'have', 'much',
-              'very']
+              'very', 'what', 'also', 'than', 'also', 'because', 'them',
+              'even', 'there', 'then', 'will', 'into', 'their', 'would',
+              'about', 'their', 'does', 'should', 'these', 'more']
 
 def generate_from_freq(word_tally):
     return WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
@@ -58,7 +60,7 @@ def get_comment_words(video_id):
 
         items = response["items"]
 
-        print(f"-------  Items returned {len(items)} --------------------------------")
+        print(f"-------  Items returned {len(items)} ---------")
         for item in items:
             item_info = item["snippet"]
 
@@ -72,7 +74,6 @@ def get_comment_words(video_id):
             print("Comment Date: ", comment_info['publishedAt'])
             print("================================\n")
 
-            # words.extend(comment_info["authorDisplayName"].split())
             words.extend(comment_info["textDisplay"].split())
         if "nextPageToken" in response:
             pageToken = response['nextPageToken']
@@ -80,10 +81,12 @@ def get_comment_words(video_id):
             pageToken = None
     return words
 
+video_id = 'avAMY6Kt6Nc'
+# video_id = 'Vi9Y9AL13Rc' # tech with Tim
+# video_id = 'oMfOpfUPX_8' # asmrmagic
 
-# get_comment_words('5cxtS8Rc28k')
-words = get_comment_words('oMfOpfUPX_8')
+words = get_comment_words(video_id)
 tally = tally_and_filter(words)
-wc = generate_from_freq(tally)
+wc = generate_from_freq(tally) # wordcloud
 display_wordcloud(wc)
 print(tally)
