@@ -81,7 +81,7 @@ def get_comment_words(video_id):
             pageToken = None
     return words
 
-video_id = 'avAMY6Kt6Nc'
+video_id = 'avAMY6Kt6Nc' # star talk
 # video_id = 'Vi9Y9AL13Rc' # tech with Tim
 # video_id = 'oMfOpfUPX_8' # asmrmagic
 
