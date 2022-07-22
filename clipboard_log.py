@@ -6,6 +6,12 @@ import pyperclip as pyc
 
 
 log_file_name = "clipboard.log"
+stop_words = ['this', 'your', 'that', 'video', 'videos', 'with',
+              'like', 'from', 'when', 'they', 'just', 'have', 'much',
+              'very', 'what', 'also', 'than', 'also', 'because', 'them',
+              'even', 'there', 'then', 'will', 'into', 'their', 'would',
+              'about', 'their', 'does', 'should', 'these', 'more',
+              'wordcloud', 'subscriber']
 
 def generate_from_freq(word_tally):
     return WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
@@ -31,7 +37,8 @@ def tally_words_in_log():
         text = log_file.read()
         words = text.split()
         for word in words:
-            if only_alpha_ascii_chars(word) and len(word) > 3:
+            word = word.lower()
+            if only_alpha_ascii_chars(word) and len(word) > 4 and word not in stop_words:
                 if word in word_tally.keys():
                     word_tally[word] += 1
                 else:
@@ -43,21 +50,26 @@ def make_word_cloud():
     wc = generate_from_freq(word_tally)
     display_wordcloud(wc)
 
-
-with open(log_file_name, "a") as log_file:
-    i = 0
-    while True:
-        pyc.waitForNewPaste()
-        text = pyc.paste()
-        entry = f'{i:8}) {datetime.now().isoformat()}  {text}\n'
-        print(entry, end="")
-        try:
-            log_file.write(entry)
-        except UnicodeEncodeError as e:
-            print(f"   Entry not saved:  {e}")
-        log_file.flush()
-        i += 1
-        if text.lower() == "stop it please":
-            break
-        elif text.lower() == "wordcloud":
-            make_word_cloud()
+file_mode = "a"
+while file_mode:
+    with open(log_file_name, file_mode) as log_file:
+        i = 0
+        while True:
+            pyc.waitForNewPaste()
+            text = pyc.paste()
+            entry = f'{i:8}) {datetime.now().isoformat()}  {text}\n'
+            print(entry, end="")
+            try:
+                log_file.write(entry)
+            except UnicodeEncodeError as e:
+                print(f"***  Entry not saved:  {e}")
+            log_file.flush()
+            i += 1
+            if text.lower() == "stop it please":
+                file_mode = None
+                break
+            elif text.lower() == "wordcloud":
+                make_word_cloud()
+            elif text.lower() == "reset it please":
+                file_mode = "w"
+                break
