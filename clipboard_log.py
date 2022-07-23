@@ -56,6 +56,7 @@ class ClipboardLog:
         word_tally = {}
         with open(self.log_file_name, "r", encoding="utf-8") as log_file:
             text = log_file.read()
+            text = replace_non_alpha_chars_with_spaces(text)
             words = text.split()
             for word in words:
                 if len(word) > 4 and word not in self.stop_words:
