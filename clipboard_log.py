@@ -1,44 +1,45 @@
+import multiprocessing
 from datetime import datetime
-from threading import Thread
+from multiprocessing import freeze_support
+
+import pyperclip as pyc
 from matplotlib import pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
-import pyperclip as pyc
+
+
+def display_wordcloud(wc):
+    print('display_wordcloud start')
+    plt.imshow(wc, interpolation='bilInear')
+    plt.axis('off')
+    plt.show()
+    print('display_wordcloud end')
+
 
 class ClipboardLog:
-
     def __init__(self):
         self.log_file_name = "clipboard.log"
         self.stop_words = ['this', 'your', 'that', 'video', 'videos', 'with',
-                      'like', 'from', 'when', 'they', 'just', 'have', 'much',
-                      'very', 'what', 'also', 'than', 'also', 'because', 'them',
-                      'even', 'there', 'then', 'will', 'into', 'their', 'would',
-                      'about', 'their', 'does', 'should', 'these', 'more',
-                      'wordcloud', 'subscriber']
-        self.display_thread = None
-        self.wordcloud = None
+                           'like', 'from', 'when', 'they', 'just', 'have', 'much',
+                           'very', 'what', 'also', 'than', 'also', 'because', 'them',
+                           'even', 'there', 'then', 'will', 'into', 'their', 'would',
+                           'about', 'their', 'does', 'should', 'these', 'more',
+                           'wordcloud', 'subscriber']
+        self.display_process = None
 
     def generate_from_freq(self, word_tally):
         return WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
                          width=900, height=500, colormap='YlGnBu', max_words=400
                          ).generate_from_frequencies(word_tally)
 
-
-    def display_wordcloud(self):
-        plt.imshow(self.wordcloud, interpolation='bilInear')
-        plt.axis('off')
-        plt.show()
-
-
-    def display_wordcloud_in_parallel(self):
-        if self.display_thread:
-            print("*** Joining old display thread")
-            self.display_thread.join()
+    def display_wordcloud_in_parallel(self, wc):
+        if self.display_process:
+            print("*** Joining old display process")
+            self.display_process.join()
             print("*** Joined")
-        self.display_thread = Thread(target=self.display_wordcloud)
-        print("*** Starting display thread")
-        self.display_thread.start()
+        self.display_process = multiprocessing.Process(target=display_wordcloud, args=(wc,))
+        print("*** Starting display process")
+        self.display_process.start()
         print("*** Started")
-
 
     def only_alpha_ascii_chars(self, word):
         for c in word:
@@ -63,8 +64,8 @@ class ClipboardLog:
     def make_word_cloud(self):
         word_tally = self.tally_words_in_log()
         if word_tally:
-            self.wordcloud = self.generate_from_freq(word_tally)
-            self.display_wordcloud()
+            wc = self.generate_from_freq(word_tally)
+            self.display_wordcloud_in_parallel(wc)
         else:
             print('*** No words yet. Copy some stuff')
 
@@ -93,5 +94,8 @@ class ClipboardLog:
                         file_mode = "w"
                         break
 
-a = ClipboardLog()
-a.clipboard_listener()
+
+if __name__ == '__main__':
+    freeze_support()
+    a = ClipboardLog()
+    a.clipboard_listener()
