@@ -7,14 +7,6 @@ from matplotlib import pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
 
 
-def display_wordcloud(wc):
-    print('display_wordcloud start')
-    plt.imshow(wc, interpolation='bilInear')
-    plt.axis('off')
-    plt.show()
-    print('display_wordcloud end')
-
-
 class ClipboardLog:
     def __init__(self):
         self.log_file_name = "clipboard.log"
@@ -31,15 +23,22 @@ class ClipboardLog:
                          width=900, height=500, colormap='YlGnBu', max_words=400
                          ).generate_from_frequencies(word_tally)
 
+    def display_wordcloud(self, wc):
+        print('***  display_wordcloud Start')
+        plt.imshow(wc, interpolation='bilInear')
+        plt.axis('off')
+        plt.show()
+        print('***  display_wordcloud End')
+
     def display_wordcloud_in_parallel(self, wc):
         if self.display_process:
-            print("*** Joining old display process")
+            print("***  Joining old display process. Close the matplotlib window to continue.")
             self.display_process.join()
-            print("*** Joined")
-        self.display_process = multiprocessing.Process(target=display_wordcloud, args=(wc,))
-        print("*** Starting display process")
+            print("***  Joined")
+        self.display_process = multiprocessing.Process(target=self.display_wordcloud, args=(wc,))
+        print("***  Starting display process")
         self.display_process.start()
-        print("*** Started")
+        print("***  Started")
 
     def only_alpha_ascii_chars(self, word):
         for c in word:
@@ -67,7 +66,7 @@ class ClipboardLog:
             wc = self.generate_from_freq(word_tally)
             self.display_wordcloud_in_parallel(wc)
         else:
-            print('*** No words yet. Copy some stuff')
+            print('*** No words yet. Copy some stuff.')
 
     def clipboard_listener(self):
         file_mode = "a"
@@ -91,6 +90,7 @@ class ClipboardLog:
                     elif text.lower() == "wordcloud":
                         self.make_word_cloud()
                     elif text.lower() == "reset it please":
+                        print("***  Truncating log file")
                         file_mode = "w"
                         break
 
