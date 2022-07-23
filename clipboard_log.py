@@ -1,6 +1,6 @@
 import multiprocessing
 from datetime import datetime
-from logging import info
+from logging import info, warning, error
 from multiprocessing import freeze_support
 
 import pyperclip as pyc
@@ -33,7 +33,7 @@ class ClipboardLog:
 
     def display_wordcloud_in_parallel(self, wc):
         if self.display_process:
-            info("***  Joining old display process. Close the matplotlib window to continue.")
+            warning("***  Joining old display process. Close the matplotlib window to continue.")
             self.display_process.join()
             info("***  Joined")
         self.display_process = multiprocessing.Process(target=self.display_wordcloud, args=(wc,))
@@ -82,7 +82,7 @@ class ClipboardLog:
                     try:
                         log_file.write(entry)
                     except UnicodeEncodeError as e:
-                        print(f"***  Entry not saved:  {e}")
+                        error(f"***  Entry not saved:  {e}")
                     log_file.flush()
                     i += 1
                     if text.lower() == "stop it please":
@@ -94,10 +94,15 @@ class ClipboardLog:
                         print("***  Truncating log file")
                         file_mode = "w"
                         break
+                    elif text.lower().find('help') != -1:
+                        print('help')
+                        print('stop it please')
+                        print('wordcloud')
+                        print('reset it please')
 
 
 if __name__ == '__main__':
-    # Calling freeze_support prevents the hangup during bootstrap phase of subprocess. Took hours and hours
+    # Calling freeze_support prevents the hangup during bootstrap phase of subprocess. It took hours and hours
     # to find this solution.
     freeze_support()
     a = ClipboardLog()
