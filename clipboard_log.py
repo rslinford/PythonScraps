@@ -1,5 +1,6 @@
 import multiprocessing
 from datetime import datetime
+from logging import info
 from multiprocessing import freeze_support
 
 import pyperclip as pyc
@@ -15,7 +16,7 @@ class ClipboardLog:
                            'very', 'what', 'also', 'than', 'also', 'because', 'them',
                            'even', 'there', 'then', 'will', 'into', 'their', 'would',
                            'about', 'their', 'does', 'should', 'these', 'more',
-                           'wordcloud', 'subscriber']
+                           'wordcloud', 'subscriber', 'which']
         self.display_process = None
 
     def generate_from_freq(self, word_tally):
@@ -24,31 +25,31 @@ class ClipboardLog:
                          ).generate_from_frequencies(word_tally)
 
     def display_wordcloud(self, wc):
-        print('***  display_wordcloud Start')
+        info('***  display_wordcloud Start')
         plt.imshow(wc, interpolation='bilInear')
         plt.axis('off')
         plt.show()
-        print('***  display_wordcloud End')
+        info('***  display_wordcloud End')
 
     def display_wordcloud_in_parallel(self, wc):
         if self.display_process:
-            print("***  Joining old display process. Close the matplotlib window to continue.")
+            info("***  Joining old display process. Close the matplotlib window to continue.")
             self.display_process.join()
-            print("***  Joined")
+            info("***  Joined")
         self.display_process = multiprocessing.Process(target=self.display_wordcloud, args=(wc,))
-        print("***  Starting display process")
+        info("***  Starting display process")
         self.display_process.start()
-        print("***  Started")
+        info("***  Started")
 
     def only_alpha_ascii_chars(self, word):
-        for c in word:
-            if c < 'A' or c > 'z' or ('Z' < c < 'a'):
-                return False
-        return True
+        # for c in word:
+        #     if c < 'A' or c > 'z' or ('Z' < c < 'a'):
+        #         return False
+        return word.isalpha()
 
     def tally_words_in_log(self):
         word_tally = {}
-        with open(self.log_file_name, "r") as log_file:
+        with open(self.log_file_name, "r", encoding="utf-8") as log_file:
             text = log_file.read()
             words = text.split()
             for word in words:
@@ -71,7 +72,7 @@ class ClipboardLog:
     def clipboard_listener(self):
         file_mode = "a"
         while file_mode:
-            with open(self.log_file_name, file_mode) as log_file:
+            with open(self.log_file_name, file_mode, encoding="utf-8") as log_file:
                 i = 0
                 while True:
                     pyc.waitForNewPaste()
@@ -96,6 +97,8 @@ class ClipboardLog:
 
 
 if __name__ == '__main__':
+    # Calling freeze_support prevents the hangup during bootstrap phase of subprocess. Took hours and hours
+    # to find this solution.
     freeze_support()
     a = ClipboardLog()
     a.clipboard_listener()
