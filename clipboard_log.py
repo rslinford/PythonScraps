@@ -8,6 +8,16 @@ from matplotlib import pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
 
 
+def replace_non_alpha_chars_with_spaces(text):
+    text_list = []
+    for c in text:
+        if str(c).isalpha():
+            text_list.append(c)
+        else:
+            text_list.append(' ')
+    return "".join(text_list)
+
+
 class ClipboardLog:
     def __init__(self):
         self.log_file_name = "clipboard.log"
@@ -77,6 +87,8 @@ class ClipboardLog:
                 while True:
                     pyc.waitForNewPaste()
                     text = pyc.paste()
+                    text = text.lower()
+                    text = replace_non_alpha_chars_with_spaces(text)
                     entry = f'{i:8}) {datetime.now().isoformat()}  {text}\n'
                     print(entry, end="")
                     try:
@@ -85,16 +97,16 @@ class ClipboardLog:
                         error(f"***  Entry not saved:  {e}")
                     log_file.flush()
                     i += 1
-                    if text.lower() == "stop it please":
+                    if text == "stop it please":
                         file_mode = None
                         break
-                    elif text.lower() == "wordcloud":
+                    elif text == "wordcloud":
                         self.make_word_cloud()
-                    elif text.lower() == "reset it please":
+                    elif text == "reset it please":
                         print("***  Truncating log file")
                         file_mode = "w"
                         break
-                    elif text.lower().find('help') != -1:
+                    elif text.find('help') != -1:
                         print('help')
                         print('stop it please')
                         print('wordcloud')
