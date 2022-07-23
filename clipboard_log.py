@@ -51,11 +51,6 @@ class ClipboardLog:
         self.display_process.start()
         info("***  Started")
 
-    def only_alpha_ascii_chars(self, word):
-        # for c in word:
-        #     if c < 'A' or c > 'z' or ('Z' < c < 'a'):
-        #         return False
-        return word.isalpha()
 
     def tally_words_in_log(self):
         word_tally = {}
@@ -63,8 +58,7 @@ class ClipboardLog:
             text = log_file.read()
             words = text.split()
             for word in words:
-                word = word.lower()
-                if self.only_alpha_ascii_chars(word) and len(word) > 4 and word not in self.stop_words:
+                if len(word) > 4 and word not in self.stop_words:
                     if word in word_tally.keys():
                         word_tally[word] += 1
                     else:
