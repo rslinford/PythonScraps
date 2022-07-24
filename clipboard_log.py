@@ -29,12 +29,14 @@ class ClipboardLog:
                            'wordcloud', 'subscriber', 'which']
         self.display_process = None
 
-    def generate_from_freq(self, word_tally):
+    @staticmethod
+    def generate_from_freq(word_tally):
         return WordCloud(stopwords=STOPWORDS, collocations=True, background_color='dimgray',
                          width=900, height=500, colormap='YlGnBu', max_words=400
                          ).generate_from_frequencies(word_tally)
 
-    def display_wordcloud(self, wc):
+    @staticmethod
+    def display_wordcloud(wc):
         info('***  display_wordcloud Start')
         plt.imshow(wc, interpolation='bilInear')
         plt.axis('off')
@@ -50,7 +52,6 @@ class ClipboardLog:
         info("***  Starting display process")
         self.display_process.start()
         info("***  Started")
-
 
     def tally_words_in_log(self):
         word_tally = {}
