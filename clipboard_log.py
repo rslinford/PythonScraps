@@ -109,7 +109,8 @@ class ClipboardLog:
 
 
 if __name__ == '__main__':
-    # Calling freeze_support prevents the hangup during bootstrap phase of subprocess. It took hours and hours
+    # Calling freeze_support prevents the hangup during
+    # bootstrap phase of subprocess. It took hours and hours
     # to find this solution.
     freeze_support()
     a = ClipboardLog()
