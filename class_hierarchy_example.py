@@ -62,32 +62,32 @@ class TestPerson(unittest.TestCase):
             Employee(2, 'George', 110)]
 
     def test_init(self):
-        self.assertTrue(self.people[3].unique_id == 2)
-        self.assertTrue(self.people[3].name == 'George')
-        self.assertTrue(self.people[0].unique_id == 7)
-        self.assertTrue(self.people[0].name == 'Sally')
+        self.assertEqual(self.people[3].unique_id, 2)
+        self.assertEqual(self.people[3].name, 'George')
+        self.assertEqual(self.people[0].unique_id, 7)
+        self.assertEqual(self.people[0].name, 'Sally')
         other_person = Person(1)
-        self.assertTrue(other_person.unique_id == 1)
-        self.assertTrue(other_person.name == '')
+        self.assertEqual(other_person.unique_id, 1)
+        self.assertEqual(other_person.name, '')
 
     def test_repr(self):
         person_repr = self.people[0].__repr__()
-        self.assertTrue(person_repr.find('Client') == 0)
-        self.assertTrue(person_repr.find('Sally') > 0)
-        self.assertTrue(person_repr.find('7') > 0)
+        self.assertEqual(person_repr.find('Client'), 0)
+        self.assertGreater(person_repr.find('Sally'), 0)
+        self.assertGreater(person_repr.find('7'), 0)
         person_repr = self.people[1].__repr__()
-        self.assertTrue(person_repr.find('Employee') == 0)
-        self.assertTrue(person_repr.find('Bob') > 0)
-        self.assertTrue(person_repr.find('3') > 0)
+        self.assertEqual(person_repr.find('Employee'), 0)
+        self.assertGreater(person_repr.find('Bob'), 0)
+        self.assertGreater(person_repr.find('3'), 0)
 
     def test_sortable(self):
-        self.assertTrue(self.people[0].unique_id == 7)
+        self.assertEqual(self.people[0].unique_id, 7)
         self.people.sort()
-        self.assertTrue(self.people[0].unique_id == 2)
+        self.assertEqual(self.people[0].unique_id, 2)
 
     def test_equality(self):
-        self.assertTrue(self.people[0] != self.people[2])
-        self.assertTrue(self.people[2] == self.people[2])
+        self.assertNotEqual(self.people[0], self.people[2])
+        self.assertEqual(self.people[2], self.people[2])
         self.assertTrue(self.people[0] in self.people)
         other_person = Employee(3)
         self.assertTrue(other_person in self.people)
@@ -104,10 +104,10 @@ class TestEmployee(unittest.TestCase):
             Employee(2, 'George', 110)]
 
     def test_init(self):
-        self.assertTrue(self.people[3].salary == 110)
-        self.assertTrue(self.people[3].name == 'George')
-        self.assertTrue(self.people[1].salary == 0)
-        self.assertTrue(self.people[1].name == 'Bob')
+        self.assertEqual(self.people[3].salary, 110)
+        self.assertEqual(self.people[3].name, 'George')
+        self.assertEqual(self.people[1].salary, 0)
+        self.assertEqual(self.people[1].name, 'Bob')
 
 
 class TestGroup(unittest.TestCase):
@@ -120,9 +120,9 @@ class TestGroup(unittest.TestCase):
 
     def test_init(self):
         group = Group(self.people)
-        self.assertTrue(len(group.person_list) == 4)
+        self.assertEqual(len(group.person_list), 4)
         person = self.people.pop(1)
-        self.assertTrue(len(group.person_list) == 4)
+        self.assertEqual(len(group.person_list), 4)
         self.assertTrue(person not in self.people)
         self.assertTrue(person in group.person_list)
 
@@ -130,7 +130,12 @@ class TestGroup(unittest.TestCase):
         group = Group(self.people)
         for i, person in enumerate(group):
             if i == 2:
-                self.assertTrue(person.name == 'Alice')
+                self.assertEqual(person.name, 'Alice')
+        iterator = group.__iter__()
+        for i in range(4):
+            next(iterator)
+        with self.assertRaises(StopIteration):
+            next(iterator)
 
 
 if __name__ == '__main__':
